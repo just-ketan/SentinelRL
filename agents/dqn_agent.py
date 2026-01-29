@@ -6,7 +6,7 @@ from agents.base_agent import BaseAgent
 from networks.q_network import QNetwork
 from replay.replay_buffer import ReplayBuffer
 
-class DQMAgent(BaseAgent):
+class DQNAgent(BaseAgent):
     def __init__(
             self,
             obs_dim, 
