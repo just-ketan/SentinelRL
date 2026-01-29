@@ -26,5 +26,4 @@ class ReplayBuffer:
         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device)
         next_obs = torch.tensor(next_obs, dtype=torch.float32, device=self.device)
         dones = torch.tensor(dones, dtype=torch.float32, device=self.device)
-
         return obs, actions, rewards, next_obs, dones
