@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class QNetwor(nn.Module):
+class QNetwork(nn.Module):
     # simple feed forward Q network
     def __init__(self, obs_dim, action_dim, hidden_dims=(128,128)):
         super().__init__()
