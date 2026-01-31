@@ -7,14 +7,14 @@ from environments.base_env import BaseEnv
 class CleanEnv(BaseEnv):
     # simple deterministic env used as clean training baseline
 
-    def __init__(self, target_position=10.0, max_steps=200, render_mode=None):
+    def __init__(self, target_position=10.0, max_steps=200, render_mode=None, terminate_on_goal=True):
         super().__init__(render_mode)
 
         self.target_position = target_position
         self.max_steps = max_steps
         self.observation_space = spaces.Box(low = -np.inf, high = np.inf, shape=(1,), dtype=np.float32)
         self.action_space = spaces.Discrete(2)
-
+        self.terminate_on_goal = terminate_on_goal
         self.state=None
         self.steps=0
 
@@ -34,7 +34,7 @@ class CleanEnv(BaseEnv):
         dist = abs(self.target_position - self.state[0])
         reward = -dist
 
-        terminated = dist < 0.5
+        terminated = dist < 0.5 if self.terminate_on_goal else False
         truncated = self.steps >= self.max_steps
 
         return self.state.copy(), reward, terminated, truncated, {}
