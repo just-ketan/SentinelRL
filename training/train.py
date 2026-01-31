@@ -45,9 +45,8 @@ def train(num_episodes=500, max_steps=200, log_intervals=20, save_path="models/d
                 f"Epsilon {eps:6.3f} | "
                 f"Loss {loss if loss is not None else 'n/a'}"
             )
-        
-        agent.save(save_path)
-        print(f"Model saved to {save_path}")
+    agent.save(save_path)
+    print(f"Model saved to {save_path}")
 
 if __name__ == "__main__":
     train()

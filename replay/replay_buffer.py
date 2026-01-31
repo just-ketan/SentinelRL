@@ -1,6 +1,7 @@
 import random
 from collections import deque
 import torch
+import numpy as np
 
 class ReplayBuffer:
     # fixed size experience replay buffer. stores transitions and supports random minibatch sampling
@@ -21,9 +22,9 @@ class ReplayBuffer:
 
         obs, actions, rewards, next_obs, dones = zip(*batch)
 
-        obs = torch.tensor(obs, dtype=torch.float32, device=self.device)
-        action = torch.tensor(action, dtype=torch.long, device=self.device)
+        obs = torch.tensor(np.stack(obs), dtype=torch.float32, device=self.device)
+        actions = torch.tensor(actions, dtype=torch.long, device=self.device)
         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device)
-        next_obs = torch.tensor(next_obs, dtype=torch.float32, device=self.device)
+        next_obs = torch.tensor(np.stack(next_obs), dtype=torch.float32, device=self.device)
         dones = torch.tensor(dones, dtype=torch.float32, device=self.device)
         return obs, actions, rewards, next_obs, dones

@@ -24,7 +24,7 @@ class CleanEnv(BaseEnv):
 
         self.state=np.array([0,0], dtype=np.float32)
         self.steps=0
-        return self.state, {}
+        return self.state.copy(), {}
     
     def step(self, action):
         self.steps += 1
@@ -37,7 +37,7 @@ class CleanEnv(BaseEnv):
         terminated = dist < 0.5
         truncated = self.steps >= self.max_steps
 
-        return self.state, reward, terminated, truncated, {}
+        return self.state.copy(), reward, terminated, truncated, {}
     
     def inject_drift(self, **kwargs):
         # clean environment does not support drift

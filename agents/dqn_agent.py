@@ -14,8 +14,8 @@ class DQNAgent(BaseAgent):
             lr=1e-4,
             gamma=0.99,
             epsilon_start=1.0,
-            epsilon_end=0.5,
-            epsilon_decay=0.995
+            epsilon_end=0.05,
+            epsilon_decay=0.995,
             buffer_capacity=100000,
             batch_size=64,
             target_update_freq=1000,
@@ -26,14 +26,21 @@ class DQNAgent(BaseAgent):
         self.gamma = gamma
         self.batch_size = batch_size
         self.target_update_freq = target_update_freq
+
         self.epsilon = epsilon_start
         self.epsilon_end = epsilon_end
         self.epsilon_decay = epsilon_decay
         
+        # networks
         self.q_net = QNetwork(obs_dim, action_dim).to(self.device)
         self.target_q_net = QNetwork(obs_dim, action_dim).to(self.device)
         self.target_q_net.load_state_dict(self.q_net.state_dict())
         self.target_q_net.eval()
+
+        self.optimizer = torch.optim.Adam(self.q_net.parameters(), lr=lr)
+
+        #replay buffer
+        self.replay_buffer = ReplayBuffer(capacity=buffer_capacity, device=self.device)
 
         self.train_steps = 0
 
@@ -43,12 +50,14 @@ class DQNAgent(BaseAgent):
             return np.random.randint(self.action_dim)
         
         with torch.no_grad():
-            obs = torch.tensor(observation, dtype=torch.float32, device=self.device).unsqueeze(0)
+            obs = torch.tensor(observation, dtype=torch.float32, device=self.device).view(1,-1)
+            obs = obs[:, : self.obs_dim]
             q_values = self.q_net(obs)
             return int(torch.argmax(q_values, dim=1).item())
     
 
     def store_transition(self, obs, action, reward, next_obs, done):
+        assert hasattr(self, "replay_buffer"), "Replay buffer not initialized"
         self.replay_buffer.push(obs, action, reward, next_obs, done)
 
     
@@ -56,6 +65,12 @@ class DQNAgent(BaseAgent):
         if len(self.replay_buffer) < self.batch_size:
             return None
         obs, actions, rewards, next_obs, dones = self.replay_buffer.sample(self.batch_size)
+        obs = obs[:, : self.obs_dim]
+        next_obs = next_obs[:, : self.obs_dim]
+        
+        # --- Shape safety (critical for RL stability) ---
+        obs = obs.view(obs.size(0), -1)
+        next_obs = next_obs.view(next_obs.size(0), -1)
         q_values = self.q_net(obs).gather(1, actions.unsqueeze(1)).squeeze(1)
 
         with torch.no_grad():
@@ -67,7 +82,7 @@ class DQNAgent(BaseAgent):
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.q_net.parameters(), 1.0)
-
+        self.optimizer.step()
         self._update_target()
         self._decay_epsilon()
 
@@ -79,7 +94,7 @@ class DQNAgent(BaseAgent):
     def _update_target(self):
         self.train_steps
         if self.train_steps%self.target_update_freq == 0:
-            self.target_q_net.load_state_dict(self.q_net.sate_dict())
+            self.target_q_net.load_state_dict(self.q_net.state_dict())
             
     def _decay_epsilon(self):
         self.epsilon = max(self.epsilon_end, self.epsilon*self.epsilon_decay)

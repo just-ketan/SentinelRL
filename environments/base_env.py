@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import gymnasium as gym
 
-class BaseEnv(gym, Env, ABC):
+class BaseEnv(gym.Env, ABC):
     # abstract base class for all sentinelRL environments
 
     metadata = {"render_modes: ": ["human", None]}
