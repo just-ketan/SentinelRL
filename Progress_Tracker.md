@@ -159,8 +159,6 @@ Make degradation curves visually compelling.
 Deliverable:
 One command → generates degradation curve plots.
 
-Estimated effort: 1–2 days
-
 ---
 
 # 🧪 Phase 4: Environmental Complexity
@@ -181,8 +179,6 @@ Move beyond deterministic degradation.
 - Observe variance spikes
 - Identify collapse boundaries
 - Compare robustness under stochastic drift
-
-Estimated effort: 3–5 days
 
 ---
 

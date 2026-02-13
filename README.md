@@ -1,41 +1,76 @@
+
 # SentinelRL
-License: MIT
 
-**SentinelRL** is an end-to-end reinforcement learning system designed to **probe, stress-test, and audit RL policies under specification and reward drift**. Unlike benchmark-focused RL projects, SentinelRL treats policy failure as a first-class concern and evaluates how agents behave when assumptions about the environment change after training.
+## Reinforcement Learning Robustness under Specification Drift
 
-This project is intentionally built as a **recruiter-probing system**: every module, experiment, and metric exists to surface design decisions, trade-offs, and failure modes during technical interviews.
+SentinelRL is a research-oriented reinforcement learning system designed to study **policy robustness under controlled non-stationarity**. 
 
----
+Instead of optimizing benchmark performance, SentinelRL investigates:
 
-## 1. Problem Statement
+> *What happens when a trained RL policy is deployed into an environment that changes?*
 
-Most reinforcement learning agents are evaluated only in the environment they are trained on. In real systems, however:
-
-* Reward functions drift
-* Transition dynamics change
-* Observations become noisy or delayed
-* Previously optimal policies become brittle
-
-**SentinelRL answers a simple but hard question:**
-
-> *Does this policy still behave sensibly when the rules change?*
+The project focuses on controlled environmental drift, degradation analysis, and algorithmic comparisons between DQN and Double DQN.
 
 ---
 
-## 2. Core Idea
+# 🚀 Project Purpose
 
-SentinelRL separates **training**, **environment specification**, and **evaluation** into explicit layers so that policies can be:
+Most reinforcement learning research assumes stationary environments. However, real-world systems change over time due to:
 
-* Trained in clean environments
-* Exposed to controlled drift
-* Stress-tested under adversarial conditions
+- Objective shifts
+- Sensor noise
+- Environmental drift
+- Changing reward structures
+- Distribution shift
 
-The system focuses on **robustness, stability, and degradation behavior**, not just cumulative reward.
+SentinelRL provides a controlled experimental framework to measure:
+
+- Graceful degradation
+- Catastrophic collapse
+- Estimation bias effects
+- Algorithmic robustness
 
 ---
 
-## 3. System Architecture (High Level)
+# 🏗 System Architecture
 
+SentinelRL follows a modular architecture.
+
+```
+sentinelrl/
+│
+├── agents/
+│   ├── base_agent.py
+│   ├── dqn_agent.py
+│   └── double_dqn_agent.py
+│
+├── environments/
+│   ├── clean_env.py
+│   └── drifted_env.py
+│
+├── replay/
+│   └── replay_buffer.py
+│
+├── networks/
+│   └── q_network.py
+│
+├── training/
+│   └── train.py
+│
+├── evaluation/
+│   ├── stress_test.py
+│   ├── metrics.py
+│   └── visualizer.py
+│
+├── results/
+├── models/
+└── requirements.txt
+```
+
+---
+
+# 🧠 Architectural Overview
+## High Level System Architecture
 ```
 Agent  ↔  Environment  ↔  Replay Buffer
   │            │              │
@@ -47,149 +82,186 @@ Agent  ↔  Environment  ↔  Replay Buffer
                 │
           Robustness Metrics
 ```
-
 Key design principle: **every arrow is swappable**.
 
----
+## 1. Agent Layer
 
-## 4. Supported Algorithms
+- DQN implementation with:
+  - Target network
+  - Experience replay
+  - Gradient clipping
+  - Epsilon-greedy exploration
+- Double DQN implementation:
+  - Decoupled action selection and evaluation
+  - Reduced overestimation bias
 
-Currently implemented and extensible:
-
-* DQN
-* Double DQN
-* Dueling DQN
-* Prioritized Experience Replay
-
-Each agent conforms to a shared interface, enabling controlled comparisons under identical drift scenarios.
-
----
-
-## 5. Environment Design
-
-SentinelRL environments are Gym-compatible but intentionally modular:
-
-* `clean_env`
-  Nominal reward and transition dynamics
-
-* `drifted_env`
-  Gradual or abrupt reward/specification changes
-
-* `adversarial_env`
-  Worst-case transitions and deceptive rewards
-
-Environment wrappers allow injecting:
-
-* Reward noise
-* Observation masking
-* Delayed rewards
+Both agents share the same training loop and evaluation interface.
 
 ---
 
-## 6. Training Pipeline
+## 2. Environment Layer
 
-Training follows a disciplined RL workflow:
+### CleanEnv
+- Deterministic 1D control problem
+- Distance-based reward shaping
+- Stable convergence verified
 
-1. Initialize clean environment
-2. Train agent with replay and target networks
-3. Periodically checkpoint policy
-4. Optionally apply curriculum learning
-5. Freeze policy for evaluation
+### DriftedEnv
+Supports:
+- Reward scaling
+- Reward flipping
+- Target drift (true non-stationarity)
 
-Training code is intentionally **boring and explicit** to make reasoning about failures easier.
-
----
-
-## 7. Evaluation Philosophy
-
-Reward alone is not enough.
-
-SentinelRL tracks:
-
-* Average episode reward
-* Regret under drift
-* Policy collapse frequency
-* Sensitivity to reward perturbations
-* Performance variance across seeds
-
-Evaluation scripts never modify training artifacts.
+Target drift modifies the goal position over time, creating a dynamic MDP where the optimal action changes.
 
 ---
 
-## 8. Example Experiments
+## 3. Evaluation & Metrics
 
-Located in `experiments/`:
+Stress testing includes:
 
-* `exp_clean_vs_drift.py`
-  Compare performance before and after specification drift
+- Clean vs Drifted comparison
+- Graded drift severity
+- Fixed-horizon evaluation
+- Deterministic evaluation mode
 
-* `exp_reward_hacking.py`
-  Detect policies exploiting unintended reward signals
+Metrics:
 
-* `exp_generalization.py`
-  Test robustness across unseen environment parameters
-
-Each experiment is reproducible and isolated.
+- Mean reward
+- Standard deviation
+- Reward variance
+- Regret
+- Collapse rate
 
 ---
 
-## 9. Folder Structure Overview
+# 🔬 Experimental Findings
+
+## Baseline Performance
+
+Both DQN and Double DQN converge reliably in stationary settings:
+
+- Mean reward ≈ -45
+- Deterministic trajectories
+- Stable loss decay
+
+Double DQN converges slightly faster and exhibits smoother learning curves.
+
+---
+
+## Reward Scaling (Early Attempt)
+
+Scaling reward magnitude did not alter policy behavior.
+
+Insight:
+
+> Changing reward magnitude without altering optimal policy does not test robustness.
+
+---
+
+## Target Drift (True Non-Stationarity)
+
+Gradual target movement introduced meaningful degradation.
+
+### DQN Results
+
+| Drift | Mean Reward |
+|-------|------------|
+| 0.0   | -45.0 |
+| 0.1   | -50.6 |
+| 0.2   | -57.6 |
+| 0.5   | -95.0 |
+
+Smooth degradation observed.
+
+---
+
+### Double DQN Results
+
+| Drift | Mean Reward |
+|-------|------------|
+| 0.1   | -50.6 |
+| 0.2   | -57.6 |
+| 0.5   | -8512.0 |
+
+Under severe drift, Double DQN exhibited catastrophic collapse.
+
+---
+
+# 🎯 Key Insights
+
+1. Double DQN improves learning stability in stationary environments.
+2. Mild non-stationarity affects both algorithms similarly.
+3. Severe drift can induce sharper collapse in Double DQN.
+4. Reducing estimation bias does not guarantee robustness.
+5. Robustness requires adaptability, not just accurate value estimates.
+
+---
+
+# 📊 Visualization
+
+Generate degradation plots:
 
 ```
-sentinelrl/
-├── agents/          # RL agents (DQN variants)
-├── environments/    # Clean, drifted, adversarial envs
-├── networks/        # Q-networks and variants
-├── replay/          # Replay buffers
-├── training/        # Training and curriculum logic
-├── evaluation/      # Stress tests and metrics
-├── experiments/     # Reproducible experiment scripts
-├── configs/         # YAML-based configuration
-├── models/          # Saved checkpoints
-└── scripts/         # Run helpers
+python -m evaluation.visualizer
+```
+
+Results are saved to:
+
+```
+results/
+```
+
+Plots include:
+
+- DQN degradation curve
+- Double DQN degradation curve
+
+---
+
+# ▶️ Training
+
+Train DQN:
+
+```
+python -m training.train --agent dqn
+```
+
+Train Double DQN:
+
+```
+python -m training.train --agent double_dqn
 ```
 
 ---
 
-## 10. Reproducibility
+# 🧪 Stress Testing
 
-All experiments:
+Example:
 
-* Are seed-controlled
-* Use explicit configuration files
-* Log metrics in machine-readable formats
-
-Shell scripts are provided for one-command reproduction.
+```
+python -m evaluation.stress_test   --checkpoint models/checkpoints/dqn.pt   --target_drift 0.2
+```
 
 ---
 
-## 11. Intended Audience
+# 🧠 Learning Outcomes
 
-This project is designed for:
+SentinelRL demonstrates:
 
-* RL practitioners
-* Systems-oriented ML engineers
-* Interviewers probing RL depth beyond benchmarks
-
-It is **not** optimized for leaderboard scores.
-
----
-
-## 12. Talking Points for Interviews
-
-Be prepared to discuss:
-
-* Why reward drift matters
-* Trade-offs between exploration and robustness
-* Failure modes of value-based methods
-* Why evaluation should be adversarial
-
-SentinelRL exists to make these discussions concrete.
+- Importance of controlled experimentation
+- Difference between estimation bias and robustness
+- Non-linear collapse under extreme non-stationarity
+- How deterministic environments mask variance-based signals
+- How architectural confidence can amplify failure modes
 
 ---
 
-## 13. Status
+# 📌 Status
+SentinelRL is a controlled reinforcement learning robustness framework showing that improved value estimation does not necessarily imply resilience to environmental drift.
+✔ Stable RL baseline  
+✔ Double DQN comparison  
+✔ Controlled non-stationarity  
+✔ Graded degradation experiments  
+✔ Visualized robustness curves  
 
-This is an active research-style engineering project. New environments, agents, and metrics are intentionally easy to add.
-
-Contributions and extensions are welcome.

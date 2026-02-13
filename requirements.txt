@@ -1,0 +1,14 @@
+# Core numerical computation
+numpy>=1.24
+
+# Deep learning framework
+torch>=2.0
+
+# Environment interface
+gymnasium>=0.29
+
+# Visualization
+matplotlib>=3.7
+
+# Optional but recommended for CLI stability
+argparse
