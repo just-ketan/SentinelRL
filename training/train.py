@@ -1,16 +1,32 @@
 import numpy as np
 from collections import deque
 import torch
+import os
+import sys
+import argparse
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 
 from environments.clean_env import CleanEnv
 from agents.dqn_agent import DQNAgent
+from agents.double_dqn_agent import DoubleDQNAgent
 
-def train(num_episodes=500, max_steps=200, log_intervals=20, save_path="models/dqn_checkpoint.pt"):
+def build_agent(agent_type, obs_dim, action_dim):
+    if agent_type == "dqn":
+        return DQNAgent(obs_dim=obs_dim, action_dim=action_dim)
+    elif agent_type == "double_dqn":
+        return DoubleDQNAgent(obs_dim=obs_dim, action_dim=action_dim)
+    else:
+        raise ValueError(f"Unknown agent type : {agent_type}")
+
+def train(agent_type="dqn", num_episodes=500, max_steps=200, log_intervals=20, save_path="models/dqn_checkpoint.pt"):
     env = CleanEnv(max_steps=max_steps)
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
 
-    agent = DQNAgent(obs_dim=obs_dim, action_dim=action_dim)
+    agent = build_agent(agent_type=agent_type, obs_dim=obs_dim, action_dim=action_dim)
     reward_window = deque(maxlen=100)
 
     print("STARTING SentinelRL TRAINING SEQUENCE......")
@@ -45,8 +61,13 @@ def train(num_episodes=500, max_steps=200, log_intervals=20, save_path="models/d
                 f"Epsilon {eps:6.3f} | "
                 f"Loss {loss if loss is not None else 'n/a'}"
             )
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
     agent.save(save_path)
-    print(f"Model saved to {save_path}")
+    print(f"{agent_type} saved to {save_path}")
 
 if __name__ == "__main__":
-    train()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--agent", type=str, default="dqn", choices=["dqn", "double_dqn"], help="Agent type to train")
+    parser.add_argument("--episodes", type=int, default=500)
+    args = parser.parse_args()
+    train(agent_type=args.agent, num_episodes=args.episodes,)
