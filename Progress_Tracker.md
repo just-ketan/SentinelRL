@@ -1,193 +1,244 @@
-# SentinelRL – Progress Tracker & Roadmap
 
-This document tracks **what has been built**, **why it matters**, and **what comes next** for SentinelRL. It is designed to be readable by both the author and external reviewers (recruiters, mentors, collaborators).
+# SentinelRL – Progress Tracker & Roadmap (Updated)
 
----
-
-## ✅ Phase 0: Foundations (COMPLETED)
-
-**Goal:** Build a correct, debuggable, end-to-end RL system before attempting robustness experiments.
-
-### Infrastructure
-
-* [x] Clean repository structure (agents / envs / training / evaluation)
-* [x] Virtual environment setup
-* [x] Deterministic execution via module-based runs (`python -m`)
-* [x] Git hygiene (`.gitignore`, checkpoints excluded)
-
-### Core RL Components
-
-* [x] BaseAgent abstraction
-* [x] DQNAgent with:
-
-  * target network
-  * experience replay
-  * epsilon-greedy exploration
-  * gradient clipping
-* [x] Replay buffer with safe batching & shape enforcement
-* [x] Q-network with configurable depth
-
-### Environment
-
-* [x] CleanEnv (deterministic, interpretable MDP)
-* [x] Explicit reward shaping
-* [x] Stable convergence verified
-
-**Outcome:**
-
-> SentinelRL can train a stable DQN agent that converges reliably under a stationary MDP.
+This document tracks **what has been built**, **what has been experimentally validated**, and **what the next research-grade steps are** for SentinelRL.
+SentinelRL is a controlled reinforcement learning robustness study framework.
 
 ---
 
-## ✅ Phase 1: Baseline Validation (COMPLETED)
+# ✅ Phase 0: Foundations (COMPLETED)
 
-**Goal:** Prove that the agent actually learns *before* testing robustness.
+## Goal
+Build a correct, debuggable, end-to-end RL system before attempting robustness experiments.
 
-### Training Results
+## Infrastructure
 
-* [x] Loss decreases smoothly
-* [x] Average reward converges (~ −45)
-* [x] Deterministic policy (std ≈ 0)
-* [x] No divergence or instability
+- [x] Clean repository structure (agents / envs / training / evaluation)
+- [x] Deterministic execution via `python -m`
+- [x] Virtual environment isolation
+- [x] CLI-driven training & evaluation
+- [x] Clean experiment separation via checkpoint selection
 
-### Evaluation
+## Core RL Components
 
-* [x] Evaluation script (greedy policy, no exploration)
-* [x] Baseline metrics collected
+- [x] BaseAgent abstraction
+- [x] DQNAgent:
+  - target network
+  - replay buffer
+  - epsilon-greedy exploration
+  - gradient clipping
+  - stable training loop
+- [x] Safe replay buffer batching
+- [x] Q-network (MLP architecture)
+- [x] Deterministic evaluation mode
 
-**Outcome:**
+## Environment
 
-> A trustworthy baseline policy suitable for robustness analysis.
+- [x] CleanEnv (deterministic, interpretable 1D control problem)
+- [x] Reward = distance-based shaping
+- [x] Stable convergence validated
 
----
+## Outcome
 
-## ✅ Phase 2: Specification Drift (COMPLETED)
-
-**Goal:** Introduce controlled non-stationarity and observe policy failure modes.
-
-### Drift Mechanisms
-
-* [x] Reward sign flip
-* [x] Reward scaling
-* [x] Moving target (non-stationary dynamics)
-* [x] Runtime drift injection
-
-### Stress Testing
-
-* [x] Stress-test harness
-* [x] Clean vs Drifted evaluation
-* [x] Fixed-horizon evaluation for drift visibility
-
-### Metrics
-
-* [x] Mean / std / min / max reward
-* [x] Reward variance (stability)
-* [x] Regret estimation
-* [x] Collapse rate
-
-**Outcome:**
-
-> The trained policy catastrophically fails under specification drift, despite perfect baseline performance.
-
-This validates the **core SentinelRL hypothesis**.
+> SentinelRL trains stable DQN agents that reliably converge under stationary MDP conditions.
 
 ---
 
-## 📊 Phase 3: Visualization & Reporting (NEXT – SHORT TERM)
+# ✅ Phase 1: Baseline Validation (COMPLETED)
 
-**Goal:** Make failure modes obvious and communicable.
+## Goal
+Verify the agent genuinely learns before testing robustness.
 
-### Planned
+## Results (DQN)
 
-* [ ] Reward distribution plots (clean vs drifted)
-* [ ] Episode reward trajectories
-* [ ] Variance spike visualization
-* [ ] Single consolidated results figure for README
+- [x] Smooth loss decay
+- [x] Convergence to mean reward ≈ -45
+- [x] Deterministic policy (std ≈ 0)
+- [x] No divergence or instability
 
-**Deliverable:**
+## Results (Double DQN)
 
-> One command → plots that visually demonstrate policy brittleness.
+- [x] Faster early convergence
+- [x] Smoother loss curve
+- [x] Similar final performance (~ -48)
+- [x] Reduced estimation volatility
 
-**Estimated effort:** 1–2 days
+## Key Insight
 
----
-
-## 🧪 Phase 4: Expanded Drift Scenarios (NEXT – MEDIUM TERM)
-
-**Goal:** Show robustness is multi-dimensional, not a single failure case.
-
-### Planned Drift Types
-
-* [ ] Gradual reward drift (slow sign/magnitude change)
-* [ ] Delayed rewards
-* [ ] Observation noise / masking
-* [ ] Partial observability
-
-### Experiments
-
-* [ ] Compare drift severity vs collapse rate
-* [ ] Identify early-warning signals (variance spikes)
-
-**Estimated effort:** 3–5 days
+Double DQN improves learning stability but not asymptotic performance in simple stationary settings.
 
 ---
 
-## 🧠 Phase 5: Algorithmic Defenses (OPTIONAL – ADVANCED)
+# ✅ Phase 2: Specification Drift & Robustness (COMPLETED)
 
-**Goal:** Explore whether standard RL improvements help robustness.
+## Goal
+Introduce controlled non-stationarity and observe degradation patterns.
 
-### Planned
+## Drift Mechanisms Implemented
 
-* [ ] Double DQN
-* [ ] Dueling DQN
-* [ ] Prioritized Experience Replay
-* [ ] Compare robustness metrics across algorithms
+- [x] Reward flip
+- [x] Reward scaling
+- [x] Target drift (true non-stationarity)
+- [x] Runtime drift injection
+- [x] CLI-driven drift severity control
 
-**Key question:**
+## Stress Testing Harness
 
-> Do better value estimates translate to robustness?
+- [x] Clean vs Drifted evaluation
+- [x] Graded target drift support
+- [x] Checkpoint-selectable evaluation
+- [x] Fixed-horizon testing for visibility
 
-**Estimated effort:** 5–7 days
+## Metrics Implemented
+
+- [x] Mean reward
+- [x] Std deviation
+- [x] Reward variance
+- [x] Regret
+- [x] Collapse rate
+
+## Experimental Findings
+
+### Reward Scaling (Early Attempt)
+
+Result:
+- Linear scaling of returns
+- No behavioral change
+- No robustness signal
+
+Insight:
+> Reward magnitude scaling does not alter optimal policy; therefore, it is not a valid robustness test.
+
+### Target Drift (True Non-Stationarity)
+
+Target shift per step introduced meaningful degradation.
+
+#### DQN Results
+
+| Drift | Mean Reward | Regret |
+|-------|------------|--------|
+| 0.0   | -45.0      | 0.0    |
+| 0.1   | -50.6      | 5.6    |
+| 0.2   | -57.6      | 12.6   |
+| 0.5   | -95.0      | 50.0   |
+
+Smooth degradation.
+
+#### Double DQN Results
+
+| Drift | Mean Reward |
+|-------|------------|
+| 0.1   | -50.6      |
+| 0.2   | -57.6      |
+| 0.5   | -8512.0    |
+
+Severe collapse at high drift.
+
+## Key Research Insight
+
+1. Double DQN improves stability under stationary conditions.
+2. Under mild non-stationarity, both degrade similarly.
+3. Under severe drift, Double DQN collapses more sharply.
+4. Reduced overestimation bias does NOT guarantee robustness.
+5. More confident value estimates may produce stronger policy lock-in.
 
 ---
 
-## 🏗️ Phase 6: System-Level Framing (POLISH)
+# 📊 Phase 3: Visualization & Reporting (COMPLETED)
 
-**Goal:** Elevate SentinelRL from a project to a system.
+## Goal
+Make degradation curves visually compelling.
 
-### Planned
+## Planned
 
-* [ ] Architecture diagram
-* [ ] Design trade-offs section
-* [ ] Failure case write-up
-* [ ] Reproducibility checklist
+- [ ] Reward vs Drift Severity plots
+- [ ] DQN vs Double DQN comparison graph
+- [ ] Collapse threshold visualization
+- [ ] Single consolidated results image for README
 
-**Deliverable:**
+Deliverable:
+One command → generates degradation curve plots.
 
-> A repo that reads like a small research + systems project, not a demo.
-
----
-
-## 🎯 Long-Term Vision
-
-SentinelRL is not about winning benchmarks.
-
-It is about answering:
-
-> *“What breaks when RL systems leave the lab?”*
-
-Potential extensions:
-
-* Multi-agent drift
-* Sim-to-real gap modeling
-* Safety / alignment stress tests
+Estimated effort: 1–2 days
 
 ---
 
-## 🧠 One-Sentence Summary (for README)
+# 🧪 Phase 4: Environmental Complexity
 
-> SentinelRL is an end-to-end reinforcement learning system for auditing policy robustness under specification drift using controlled environments and failure-oriented metrics.
+## Goal
+Move beyond deterministic degradation.
+
+## Planned Drift Extensions
+
+- [ ] Randomized initial states
+- [ ] Observation noise
+- [ ] Delayed rewards
+- [ ] Partial observability
+- [ ] Stochastic transitions
+
+## Experimental Goals
+
+- Observe variance spikes
+- Identify collapse boundaries
+- Compare robustness under stochastic drift
+
+Estimated effort: 3–5 days
 
 ---
 
-*Last updated: Phase 2 complete. Baseline and drift analysis validated.*
+# 🧠 Phase 5: Algorithmic Defenses 
+
+## Goal
+Test whether architectural improvements help robustness.
+
+## Planned
+
+- [x] Double DQN (completed)
+- [ ] Dueling DQN
+- [ ] Prioritized Replay
+- [ ] Online adaptation under drift
+- [ ] Uncertainty-aware exploration
+
+## Core Research Question
+
+> Does architectural bias reduction improve robustness to non-stationary objectives?
+
+---
+
+# 🏗️ Phase 6: System-Level Framing 
+
+## Goal
+Elevate SentinelRL from project to mini research system.
+
+## Planned
+
+- [ ] Architecture diagram
+- [ ] Experimental methodology section
+- [ ] Failure case analysis write-up
+- [ ] Reproducibility checklist
+- [ ] Results discussion section in README
+
+Deliverable:
+Repository reads like a small research paper with code.
+
+---
+
+# 🎯 Current Project Status
+
+✔ Stable RL baseline  
+✔ Comparative algorithm study  
+✔ Controlled non-stationarity  
+✔ Graded robustness testing  
+✔ Meaningful algorithmic insight  
+
+SentinelRL has successfully transitioned from:
+
+> “Does it train?”
+
+to
+
+> “How does it fail under environmental shift?”
+
+---
+> SentinelRL is a research-oriented reinforcement learning system for studying policy robustness under controlled non-stationarity, demonstrating that estimation bias reduction alone does not guarantee resilience to environmental drift.
+

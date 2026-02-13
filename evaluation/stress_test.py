@@ -38,7 +38,7 @@ def run_policy(env, agent, num_episodes=50, max_steps=200):
         rewards.append(episode_reward)
     return np.array(rewards)
 
-def stress_test(checkpoint_path, num_episodes=50, collapse_threshold=200.0, optimal_reward=-45.0, reward_flip=False, reward_scale=1.0, drift_start_step=1, ):
+def stress_test(checkpoint_path, num_episodes=50, collapse_threshold=200.0, optimal_reward=-45.0, reward_flip=False, reward_scale=1.0, drift_start_step=1, target_drift=0.0, ):
     # load agent
     clean_env = CleanEnv(terminate_on_goal=True)
     obs_dim = clean_env.observation_space.shape[0]
@@ -50,7 +50,7 @@ def stress_test(checkpoint_path, num_episodes=50, collapse_threshold=200.0, opti
 
     clean_rewards = run_policy(clean_env, agent, num_episodes=num_episodes)
     
-    drifted_env = DriftedEnv(reward_flip=reward_flip, reward_scale=reward_scale, drift_start_step=drift_start_step)
+    drifted_env = DriftedEnv(reward_flip=reward_flip, reward_scale=reward_scale, drift_start_step=drift_start_step, target_drift_per_step=target_drift)
     # drifted_env.terminate_on_goal=False
     drifted_rewards = run_policy(drifted_env, agent, num_episodes=num_episodes)
 
@@ -76,6 +76,6 @@ if __name__ == "__main__":
     parser.add_argument("--reward_flip", action="store_true", help="Enable reward sign flip")
     parser.add_argument("--reward_scale", type=float, default=1.0, help="Scale factor for reward under drift")
     parser.add_argument("--drift_start", type=int, default=1, help="Step at which drift begin")
-
+    parser.add_argument("--target_drift", type=float, default=0.0, help="target drift value")
     args = parser.parse_args()
-    stress_test(checkpoint_path=args.checkpoint, num_episodes=args.episodes, reward_flip=args.reward_flip, reward_scale=args.reward_scale, drift_start_step=args.drift_start, )
+    stress_test(checkpoint_path=args.checkpoint, num_episodes=args.episodes, reward_flip=args.reward_flip, reward_scale=args.reward_scale, drift_start_step=args.drift_start, target_drift=args.target_drift )
